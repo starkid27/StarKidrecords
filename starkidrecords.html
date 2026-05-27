@@ -1,0 +1,2079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Starkidrecords — Artist Ecosystem</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #030507;
+    --deep: #080c12;
+    --surface: #0d1420;
+    --card: #111827;
+    --border: #1e2d42;
+    --border-bright: #2a3f5a;
+    --gold: #c9a84c;
+    --gold-light: #e8c96a;
+    --gold-dim: #7a6130;
+    --cyan: #00d4ff;
+    --cyan-dim: #00617a;
+    --white: #f0f4f8;
+    --muted: #6b7e96;
+    --danger: #ff4444;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--black);
+    color: var(--white);
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--deep); }
+  ::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.2rem 2.5rem;
+    background: rgba(3,5,7,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: 0.12em;
+    color: var(--white);
+    text-decoration: none;
+  }
+
+  .nav-logo span { color: var(--gold); }
+
+  .nav-links {
+    display: flex;
+    gap: 2.2rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--gold); }
+
+  .nav-cta {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 0.55rem 1.3rem;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-decoration: none;
+  }
+
+  .nav-cta:hover {
+    background: var(--gold);
+    color: var(--black);
+  }
+
+  /* ─── HERO ─── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8rem 2.5rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 60% 40%, rgba(201,168,76,0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 20% 70%, rgba(0,212,255,0.04) 0%, transparent 60%),
+      linear-gradient(180deg, var(--black) 0%, var(--deep) 100%);
+  }
+
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+  }
+
+  .hero-content {
+    position: relative;
+    max-width: 900px;
+  }
+
+  .hero-eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.2s forwards;
+  }
+
+  .hero-eyebrow::before {
+    content: '';
+    display: block;
+    width: 2rem;
+    height: 1px;
+    background: var(--gold);
+  }
+
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(4rem, 11vw, 9rem);
+    line-height: 0.92;
+    letter-spacing: 0.02em;
+    margin-bottom: 1.8rem;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.4s forwards;
+  }
+
+  .hero-title .line2 {
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(201,168,76,0.4);
+    display: block;
+  }
+
+  .hero-title .accent { color: var(--gold); }
+
+  .hero-sub {
+    font-size: 1.05rem;
+    color: var(--muted);
+    max-width: 520px;
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+    font-weight: 400;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.6s forwards;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.8s forwards;
+  }
+
+  .btn-primary {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: var(--gold);
+    color: var(--black);
+    border: none;
+    padding: 0.9rem 2rem;
+    cursor: pointer;
+    font-weight: 700;
+    transition: all 0.25s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-primary:hover {
+    background: var(--gold-light);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(201,168,76,0.25);
+  }
+
+  .btn-ghost {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: transparent;
+    color: var(--white);
+    border: 1px solid var(--border-bright);
+    padding: 0.9rem 2rem;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--gold-dim);
+    color: var(--gold);
+  }
+
+  .hero-stats {
+    position: absolute;
+    right: 2.5rem;
+    bottom: 4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    opacity: 0;
+    animation: fadeIn 1s 1.2s forwards;
+  }
+
+  .stat {
+    text-align: right;
+    border-right: 2px solid var(--gold-dim);
+    padding-right: 1rem;
+  }
+
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: var(--gold);
+    letter-spacing: 0.05em;
+    display: block;
+  }
+
+  .stat-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ─── SECTION COMMONS ─── */
+  section {
+    padding: 6rem 2.5rem;
+  }
+
+  .section-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+
+  .section-tag::before {
+    content: '';
+    display: block;
+    width: 1.5rem;
+    height: 1px;
+    background: var(--gold);
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    letter-spacing: 0.04em;
+    margin-bottom: 1rem;
+    line-height: 1;
+  }
+
+  .section-desc {
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    max-width: 520px;
+    margin-bottom: 3.5rem;
+  }
+
+  /* ─── MARQUEE ─── */
+  .marquee-wrap {
+    overflow: hidden;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 0;
+    background: var(--surface);
+  }
+
+  .marquee-track {
+    display: flex;
+    gap: 3rem;
+    animation: marquee 20s linear infinite;
+    white-space: nowrap;
+    width: max-content;
+  }
+
+  .marquee-item {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .marquee-item .dot {
+    width: 4px;
+    height: 4px;
+    background: var(--gold);
+    border-radius: 50%;
+  }
+
+  /* ─── AI TOOLS GRID ─── */
+  .ai-section { background: var(--deep); }
+
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5px;
+    background: var(--border);
+  }
+
+  .tool-card {
+    background: var(--card);
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  .tool-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(201,168,76,0.06) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .tool-card:hover { background: #141e2e; }
+  .tool-card:hover::before { opacity: 1; }
+
+  .tool-icon {
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--border-bright);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.2rem;
+    font-size: 1.2rem;
+    transition: border-color 0.3s;
+    position: relative;
+  }
+
+  .tool-card:hover .tool-icon { border-color: var(--gold-dim); }
+
+  .tool-card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.02em;
+  }
+
+  .tool-card-desc {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 1.2rem;
+  }
+
+  .tool-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    border: 1px solid var(--border);
+    padding: 0.2rem 0.6rem;
+    display: inline-block;
+  }
+
+  .tool-card:hover .tool-tag {
+    color: var(--gold);
+    border-color: var(--gold-dim);
+  }
+
+  /* ─── AI DEMO PANEL ─── */
+  .ai-demo-section {
+    background: var(--black);
+    padding: 6rem 2.5rem;
+  }
+
+  .ai-demo-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 4rem;
+    align-items: start;
+    max-width: 1100px;
+  }
+
+  .ai-demo-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    position: relative;
+  }
+
+  .ai-demo-panel::before {
+    content: 'LIVE DEMO';
+    position: absolute;
+    top: -1px;
+    left: 1.5rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    background: var(--gold);
+    color: var(--black);
+    padding: 0.15rem 0.5rem;
+    font-weight: 700;
+  }
+
+  .demo-topbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .demo-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .demo-dot.r { background: #ff5f57; }
+  .demo-dot.y { background: #ffbd2e; }
+  .demo-dot.g { background: #28c840; }
+
+  .demo-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    margin-left: 0.5rem;
+  }
+
+  .demo-field {
+    background: var(--deep);
+    border: 1px solid var(--border);
+    padding: 0.7rem 1rem;
+    margin-bottom: 0.75rem;
+    width: 100%;
+  }
+
+  .demo-field label {
+    display: block;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 0.4rem;
+  }
+
+  .demo-field input, .demo-field select, .demo-field textarea {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--white);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    width: 100%;
+    resize: none;
+  }
+
+  .demo-field select option { background: var(--deep); }
+
+  .demo-run-btn {
+    width: 100%;
+    background: var(--gold);
+    color: var(--black);
+    border: none;
+    padding: 0.85rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 0.5rem;
+  }
+
+  .demo-run-btn:hover { background: var(--gold-light); }
+  .demo-run-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+  .demo-output {
+    background: var(--deep);
+    border: 1px solid var(--border);
+    padding: 1rem;
+    margin-top: 1rem;
+    min-height: 100px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    line-height: 1.7;
+    color: var(--white);
+    white-space: pre-wrap;
+  }
+
+  .demo-output.loading { color: var(--gold); }
+  .demo-output .output-label {
+    font-size: 0.58rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    display: block;
+    margin-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.5rem;
+  }
+
+  .typing-cursor {
+    display: inline-block;
+    width: 8px;
+    height: 14px;
+    background: var(--gold);
+    animation: blink 0.8s infinite;
+    vertical-align: text-bottom;
+    margin-left: 2px;
+  }
+
+  /* ─── PROCESS ─── */
+  .process-section { background: var(--surface); }
+
+  .process-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 0;
+    position: relative;
+  }
+
+  .process-step {
+    padding: 2.5rem 2rem;
+    border: 1px solid var(--border);
+    position: relative;
+    background: var(--card);
+    transition: background 0.3s;
+  }
+
+  .process-step:hover { background: #141e2e; }
+
+  .step-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 4rem;
+    color: var(--border-bright);
+    line-height: 1;
+    margin-bottom: 0.8rem;
+    transition: color 0.3s;
+  }
+
+  .process-step:hover .step-num { color: var(--gold-dim); }
+
+  .step-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 0.6rem;
+    letter-spacing: 0.02em;
+  }
+
+  .step-desc {
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ─── ARTIST PROFILES ─── */
+  .artists-section { background: var(--black); }
+
+  .artists-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5px;
+    background: var(--border);
+    margin-top: 0.5rem;
+  }
+
+  .artist-card {
+    background: var(--card);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    cursor: pointer;
+    transition: background 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .artist-card:hover { background: #141e2e; }
+
+  .artist-avatar {
+    width: 56px;
+    height: 56px;
+    border: 1px solid var(--border-bright);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    color: var(--gold);
+    background: var(--surface);
+    transition: border-color 0.3s;
+  }
+
+  .artist-card:hover .artist-avatar { border-color: var(--gold-dim); }
+
+  .artist-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+
+  .artist-genre {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .artist-status {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: auto;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #28c840;
+  }
+
+  .status-dot.yellow { background: #ffbd2e; }
+
+  .status-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ─── DEMO SUBMISSION ─── */
+  .demo-submit-section { background: var(--deep); }
+
+  .submit-layout {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 4rem;
+    align-items: start;
+    max-width: 1000px;
+  }
+
+  .submit-form {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 2rem;
+  }
+
+  .form-row {
+    margin-bottom: 1rem;
+  }
+
+  .form-row label {
+    display: block;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 0.4rem;
+  }
+
+  .form-row input, .form-row select, .form-row textarea {
+    width: 100%;
+    background: var(--deep);
+    border: 1px solid var(--border);
+    color: var(--white);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    padding: 0.7rem 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: none;
+  }
+
+  .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+    border-color: var(--gold-dim);
+  }
+
+  .form-row select option { background: var(--deep); }
+
+  .upload-zone {
+    border: 1px dashed var(--border-bright);
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.3s;
+    background: var(--deep);
+  }
+
+  .upload-zone:hover { border-color: var(--gold-dim); }
+
+  .upload-icon { font-size: 1.8rem; margin-bottom: 0.5rem; }
+
+  .upload-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .trust-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .trust-item {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .trust-icon {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    margin-top: 2px;
+  }
+
+  .trust-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .trust-desc {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ─── ROADMAP ─── */
+  .roadmap-section { background: var(--black); }
+
+  .roadmap-layout {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 4rem;
+    align-items: start;
+    max-width: 1000px;
+  }
+
+  .roadmap-phases {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+  }
+
+  .roadmap-phases::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0; bottom: 0;
+    width: 1px;
+    background: var(--border);
+  }
+
+  .phase-item {
+    display: flex;
+    gap: 1.2rem;
+    align-items: flex-start;
+    padding: 1.2rem 0;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .phase-item:hover { opacity: 0.8; }
+  .phase-item.active .phase-dot { background: var(--gold); border-color: var(--gold); }
+  .phase-item.active .phase-label { color: var(--white); }
+  .phase-item.done .phase-dot { background: var(--gold-dim); border-color: var(--gold-dim); }
+
+  .phase-dot {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 50%;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+  }
+
+  .phase-label {
+    padding-top: 4px;
+  }
+
+  .phase-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .phase-time {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .phase-detail {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 2rem;
+  }
+
+  .phase-detail-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.3rem;
+  }
+
+  .phase-detail-sub {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--gold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+  }
+
+  .task-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .task-item {
+    display: flex;
+    gap: 0.8rem;
+    align-items: flex-start;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  .task-item::before {
+    content: '→';
+    color: var(--gold-dim);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .task-item.done { color: var(--border-bright); }
+  .task-item.done::before { content: '✓'; color: var(--gold-dim); }
+
+  .stack-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .chip {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid var(--border-bright);
+    color: var(--muted);
+    padding: 0.3rem 0.7rem;
+    transition: all 0.2s;
+  }
+
+  .chip.gold {
+    border-color: var(--gold-dim);
+    color: var(--gold);
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    background: var(--deep);
+    border-top: 1px solid var(--border);
+    padding: 3rem 2.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .footer-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 0.12em;
+    color: var(--white);
+  }
+
+  .footer-logo span { color: var(--gold); }
+
+  .footer-copy {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 1.8rem;
+    list-style: none;
+  }
+
+  .footer-links a {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: var(--gold); }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(201,168,76,0.3); }
+    50% { box-shadow: 0 0 0 6px rgba(201,168,76,0); }
+  }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(3,5,7,0.92);
+    backdrop-filter: blur(8px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: var(--card);
+    border: 1px solid var(--border-bright);
+    padding: 2.5rem;
+    max-width: 540px;
+    width: 100%;
+    position: relative;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    transition: color 0.2s;
+  }
+
+  .modal-close:hover { color: var(--white); }
+
+  .modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.3rem;
+  }
+
+  .modal-sub {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--gold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.2rem; }
+    .nav-links { display: none; }
+    section { padding: 4rem 1.2rem; }
+    .hero { padding: 7rem 1.2rem 3rem; }
+    .hero-stats { display: none; }
+    .ai-demo-layout, .submit-layout, .roadmap-layout { grid-template-columns: 1fr; gap: 2rem; }
+    .hero-title { font-size: 3.8rem; }
+    footer { flex-direction: column; align-items: flex-start; }
+    .footer-links { flex-wrap: wrap; gap: 1rem; }
+  }
+
+  /* ─── PLAN DOC SECTION ─── */
+  .plan-section {
+    background: var(--surface);
+    padding: 5rem 2.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .plan-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5px;
+    background: var(--border);
+    margin-top: 2rem;
+  }
+
+  .plan-block {
+    background: var(--card);
+    padding: 1.8rem;
+  }
+
+  .plan-block-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 0.06em;
+    color: var(--gold);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .plan-block ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .plan-block li {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.5;
+    padding-left: 1rem;
+    position: relative;
+  }
+
+  .plan-block li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--gold-dim);
+    font-size: 0.7rem;
+  }
+
+  .plan-block li strong { color: var(--white); font-weight: 600; }
+
+  .highlight-box {
+    background: rgba(201,168,76,0.06);
+    border: 1px solid var(--gold-dim);
+    padding: 1.2rem 1.5rem;
+    margin-top: 2rem;
+    max-width: 800px;
+  }
+
+  .highlight-box p {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .highlight-box strong { color: var(--gold); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">STARKID<span>★</span>RECORDS</a>
+  <ul class="nav-links">
+    <li><a href="#artists">Artists</a></li>
+    <li><a href="#ai-tools">AI Tools</a></li>
+    <li><a href="#process">Process</a></li>
+    <li><a href="#submit">Submit</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+  </ul>
+  <a href="#submit" class="nav-cta">Submit Demo</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Independent · AI-Powered · Artist-First</div>
+    <h1 class="hero-title">
+      WHERE STARS<br>
+      <span class="line2">ARE BORN</span>
+    </h1>
+    <p class="hero-sub">Starkidrecords is a modern, AI-powered music label platform built for the next generation of artists. Transparent deals. Smart tools. Real support.</p>
+    <div class="hero-actions">
+      <a href="#submit" class="btn-primary">Submit Your Demo</a>
+      <a href="#ai-tools" class="btn-ghost">Explore AI Tools</a>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="stat">
+      <span class="stat-num">12</span>
+      <span class="stat-label">Active Artists</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">48K</span>
+      <span class="stat-label">Monthly Streams</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">100%</span>
+      <span class="stat-label">Transparent</span>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track" id="marqueeTrack">
+    <span class="marquee-item"><span class="dot"></span>AI Bio Generator</span>
+    <span class="marquee-item"><span class="dot"></span>Release Planner</span>
+    <span class="marquee-item"><span class="dot"></span>Demo Submission</span>
+    <span class="marquee-item"><span class="dot"></span>Contract Explainer</span>
+    <span class="marquee-item"><span class="dot"></span>Artist Profiles</span>
+    <span class="marquee-item"><span class="dot"></span>Royalty Tracker</span>
+    <span class="marquee-item"><span class="dot"></span>Support Assistant</span>
+    <span class="marquee-item"><span class="dot"></span>Transparent Onboarding</span>
+    <span class="marquee-item"><span class="dot"></span>AI Bio Generator</span>
+    <span class="marquee-item"><span class="dot"></span>Release Planner</span>
+    <span class="marquee-item"><span class="dot"></span>Demo Submission</span>
+    <span class="marquee-item"><span class="dot"></span>Contract Explainer</span>
+    <span class="marquee-item"><span class="dot"></span>Artist Profiles</span>
+    <span class="marquee-item"><span class="dot"></span>Royalty Tracker</span>
+    <span class="marquee-item"><span class="dot"></span>Support Assistant</span>
+    <span class="marquee-item"><span class="dot"></span>Transparent Onboarding</span>
+  </div>
+</div>
+
+<!-- COMPLETE PLATFORM PLAN -->
+<section class="plan-section">
+  <div class="section-tag">Master Plan</div>
+  <h2 class="section-title">YOUR COMPLETE ROADMAP</h2>
+  <p class="section-desc">Everything you need to build Starkidrecords from zero to a real artist ecosystem — explained for beginners.</p>
+
+  <div class="highlight-box">
+    <p>💡 <strong>How to use this page:</strong> This is your full interactive prototype AND master plan. Scroll through to see every section of your platform. The AI tools below are <strong>fully functional</strong> — they call a real AI. Use this as your design reference and presentation to collaborators.</p>
+  </div>
+
+  <div class="plan-grid">
+    <div class="plan-block">
+      <div class="plan-block-title">📐 Phase 1 — Foundation (Week 1–2)</div>
+      <ul>
+        <li><strong>Set up GitHub</strong> — free code storage & version control</li>
+        <li><strong>Create Vercel account</strong> — free hosting, 1-click deploy</li>
+        <li><strong>Start with Next.js</strong> — use <code>npx create-next-app</code></li>
+        <li><strong>Install Tailwind CSS</strong> — utility-first styling</li>
+        <li><strong>Create Supabase project</strong> — free Postgres database</li>
+        <li><strong>Buy domain on Namecheap</strong> — ~$10/year, connect to Vercel</li>
+      </ul>
+    </div>
+    <div class="plan-block">
+      <div class="plan-block-title">🎨 Phase 2 — Core Pages (Week 3–4)</div>
+      <ul>
+        <li><strong>Homepage</strong> — hero, mission, featured artists</li>
+        <li><strong>Artist profiles</strong> — photo, bio, releases, links</li>
+        <li><strong>Releases page</strong> — album/single cards with streaming links</li>
+        <li><strong>Demo submission form</strong> — with Supabase storage</li>
+        <li><strong>About / manifesto page</strong> — builds trust</li>
+        <li><strong>Contact page</strong> — use Resend for emails (free tier)</li>
+      </ul>
+    </div>
+    <div class="plan-block">
+      <div class="plan-block-title">🤖 Phase 3 — AI Features (Week 5–6)</div>
+      <ul>
+        <li><strong>Get Anthropic API key</strong> — pay-per-use, starts cheap</li>
+        <li><strong>AI Bio Generator</strong> — input genre/style → get bio</li>
+        <li><strong>AI Release Planner</strong> — input release date → get plan</li>
+        <li><strong>AI Contract Explainer</strong> — paste clause → plain English</li>
+        <li><strong>AI Support Chat</strong> — FAQ bot for artists</li>
+        <li><strong>Store prompts in Supabase</strong> — track usage</li>
+      </ul>
+    </div>
+    <div class="plan-block">
+      <div class="plan-block-title">🔐 Phase 4 — Artist Dashboard (Week 7–8)</div>
+      <ul>
+        <li><strong>Supabase Auth</strong> — email/password login, free</li>
+        <li><strong>Artist portal</strong> — private dashboard per artist</li>
+        <li><strong>Upload releases</strong> — files stored in Supabase Storage</li>
+        <li><strong>View submissions</strong> — admin panel to review demos</li>
+        <li><strong>Royalty transparency page</strong> — even a simple table builds trust</li>
+        <li><strong>Notification emails</strong> — via Resend when demo reviewed</li>
+      </ul>
+    </div>
+    <div class="plan-block">
+      <div class="plan-block-title">🛠 Free Tools Stack</div>
+      <ul>
+        <li><strong>Next.js</strong> — React framework, industry standard</li>
+        <li><strong>Tailwind CSS</strong> — fast, consistent styling</li>
+        <li><strong>Supabase</strong> — database, auth, storage (free tier)</li>
+        <li><strong>Vercel</strong> — free hosting, auto-deploys from GitHub</li>
+        <li><strong>Anthropic API</strong> — Claude AI (pay per use, very cheap)</li>
+        <li><strong>Resend</strong> — 100 emails/day free tier</li>
+        <li><strong>Cloudinary</strong> — free image/audio hosting</li>
+      </ul>
+    </div>
+    <div class="plan-block">
+      <div class="plan-block-title">📚 Learning Path (While Building)</div>
+      <ul>
+        <li><strong>HTML/CSS basics</strong> — freeCodeCamp (1 week)</li>
+        <li><strong>JavaScript fundamentals</strong> — javascript.info (2 weeks)</li>
+        <li><strong>React basics</strong> — react.dev official tutorial</li>
+        <li><strong>Next.js</strong> — nextjs.org/learn (official, free)</li>
+        <li><strong>Supabase</strong> — supabase.com/docs (excellent docs)</li>
+        <li><strong>Ask Claude for help</strong> — paste your code, explain errors</li>
+      </ul>
+    </div>
+    <div class="plan-block">
+      <div class="plan-block-title">🏢 Business Structure</div>
+      <ul>
+        <li><strong>Register as LLC</strong> — $50–200 depending on state (US)</li>
+        <li><strong>Open business bank account</strong> — Mercury.co is free</li>
+        <li><strong>Royalty splits</strong> — use SoundExchange + DistroKid</li>
+        <li><strong>Contracts</strong> — use Music Attorney templates (NOLO)</li>
+        <li><strong>Publishing</strong> — register with ASCAP or BMI (free)</li>
+        <li><strong>Distribution</strong> — DistroKid $22/year for unlimited releases</li>
+      </ul>
+    </div>
+    <div class="plan-block">
+      <div class="plan-block-title">📈 Growth & Scaling (Month 3+)</div>
+      <ul>
+        <li><strong>Artist referral program</strong> — invite system with Supabase</li>
+        <li><strong>Analytics dashboard</strong> — Plausible.io ($9/mo) or self-host</li>
+        <li><strong>Newsletter</strong> — Resend + custom list for fans</li>
+        <li><strong>Blog/press page</strong> — Next.js MDX for SEO</li>
+        <li><strong>AI mastering integrations</strong> — Landr or Dolby API</li>
+        <li><strong>Mobile app</strong> — React Native (same code, different target)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- AI TOOLS -->
+<section class="ai-section" id="ai-tools">
+  <div class="section-tag">Powered by Claude AI</div>
+  <h2 class="section-title">AI TOOLS FOR ARTISTS</h2>
+  <p class="section-desc">Practical AI that does real work — not gimmicks. Every tool is designed to save artists hours and help them present themselves professionally.</p>
+
+  <div class="tools-grid">
+    <div class="tool-card" onclick="openDemo('bio')">
+      <div class="tool-icon">✍️</div>
+      <div class="tool-card-title">AI Bio Generator</div>
+      <div class="tool-card-desc">Answer a few questions about your sound and story. Get a press-ready artist bio in seconds that actually sounds human.</div>
+      <span class="tool-tag">Try Live Demo →</span>
+    </div>
+    <div class="tool-card" onclick="openDemo('release')">
+      <div class="tool-icon">📅</div>
+      <div class="tool-card-title">AI Release Planner</div>
+      <div class="tool-card-desc">Set your release date and genre. Get a full 6-week marketing timeline with social posts, PR moves, and playlist pitching strategy.</div>
+      <span class="tool-tag">Try Live Demo →</span>
+    </div>
+    <div class="tool-card" onclick="openDemo('contract')">
+      <div class="tool-icon">📄</div>
+      <div class="tool-card-title">Contract Explainer</div>
+      <div class="tool-card-desc">Paste any music contract clause. Get a plain-English breakdown of what it means, red flags to watch for, and questions to ask your lawyer.</div>
+      <span class="tool-tag">Try Live Demo →</span>
+    </div>
+    <div class="tool-card" onclick="openDemo('support')">
+      <div class="tool-icon">💬</div>
+      <div class="tool-card-title">AI Support Assistant</div>
+      <div class="tool-card-desc">24/7 support for your artists. Answers questions about royalties, distribution, submission guidelines, and label processes instantly.</div>
+      <span class="tool-tag">Try Live Demo →</span>
+    </div>
+    <div class="tool-card" onclick="openDemo('press')">
+      <div class="tool-icon">📰</div>
+      <div class="tool-card-title">Press Release Writer</div>
+      <div class="tool-card-desc">Turn your release info into a professional press release ready to send to blogs, playlists, and music journalists.</div>
+      <span class="tool-tag">Try Live Demo →</span>
+    </div>
+    <div class="tool-card" onclick="openDemo('feedback')">
+      <div class="tool-icon">🎵</div>
+      <div class="tool-card-title">Demo Feedback Organizer</div>
+      <div class="tool-card-desc">Paste your A&R notes. Get structured, actionable feedback formatted for artists — professional, constructive, and clear.</div>
+      <span class="tool-tag">Try Live Demo →</span>
+    </div>
+  </div>
+</section>
+
+<!-- AI DEMO PANEL -->
+<section class="ai-demo-section">
+  <div class="ai-demo-layout">
+    <div>
+      <div class="section-tag">Interactive</div>
+      <h2 class="section-title">TRY THE AI BIO GENERATOR</h2>
+      <p class="section-desc">This is a fully functional demo. Fill in the fields and hit Generate — it calls a real AI and writes your bio.</p>
+      <div class="trust-list" style="margin-top: 2rem;">
+        <div class="trust-item">
+          <div class="trust-icon">⚡</div>
+          <div>
+            <div class="trust-title">Instant Results</div>
+            <div class="trust-desc">No waiting days for a response. AI gives you a draft in under 10 seconds.</div>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">✏️</div>
+          <div>
+            <div class="trust-title">Edit Freely</div>
+            <div class="trust-desc">The output is a starting point. Copy it, edit it, make it yours.</div>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">🔒</div>
+          <div>
+            <div class="trust-title">Your Data Stays Private</div>
+            <div class="trust-desc">We don't store your inputs. Generate as many times as you like.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="ai-demo-panel">
+        <div class="demo-topbar">
+          <div class="demo-dot r"></div>
+          <div class="demo-dot y"></div>
+          <div class="demo-dot g"></div>
+          <span class="demo-label">starkidrecords / ai-bio-generator</span>
+        </div>
+        <div class="demo-field">
+          <label>Artist / Band Name</label>
+          <input type="text" id="bioName" placeholder="e.g. Nova Shyne" />
+        </div>
+        <div class="demo-field">
+          <label>Primary Genre</label>
+          <input type="text" id="bioGenre" placeholder="e.g. Alt R&B, Dark Pop, Trap Soul" />
+        </div>
+        <div class="demo-field">
+          <label>Hometown / Location</label>
+          <input type="text" id="bioLocation" placeholder="e.g. Atlanta, GA" />
+        </div>
+        <div class="demo-field">
+          <label>Musical Influences (comma-separated)</label>
+          <input type="text" id="bioInfluences" placeholder="e.g. Frank Ocean, SZA, The Weeknd" />
+        </div>
+        <div class="demo-field">
+          <label>Describe your sound / vibe (2–3 sentences)</label>
+          <textarea id="bioSound" rows="3" placeholder="My music blends melancholy production with raw emotional lyrics..."></textarea>
+        </div>
+        <div class="demo-field">
+          <label>Bio Length</label>
+          <select id="bioLength">
+            <option value="short">Short (2–3 sentences)</option>
+            <option value="medium" selected>Medium (1 paragraph)</option>
+            <option value="long">Full Press Bio (3 paragraphs)</option>
+          </select>
+        </div>
+        <button class="demo-run-btn" onclick="generateBio()" id="bioBtn">✦ Generate Artist Bio</button>
+        <div class="demo-output" id="bioOutput" style="display:none;">
+          <span class="output-label">Generated Bio</span>
+          <span id="bioText"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section class="process-section" id="process">
+  <div class="section-tag">How It Works</div>
+  <h2 class="section-title">TRANSPARENT ONBOARDING</h2>
+  <p class="section-desc">No hidden clauses. No confusion. Artists know exactly what happens at every step — before they sign anything.</p>
+
+  <div class="process-grid">
+    <div class="process-step">
+      <div class="step-num">01</div>
+      <div class="step-title">Submit Your Demo</div>
+      <div class="step-desc">Upload your best 1–3 tracks through our secure form. Tell us about yourself and your vision. No hoops, no gatekeeping.</div>
+    </div>
+    <div class="process-step">
+      <div class="step-num">02</div>
+      <div class="step-title">A&R Review (2 weeks)</div>
+      <div class="step-desc">Every demo gets a real listen. You'll receive structured AI-assisted feedback regardless of the decision — no silent rejections.</div>
+    </div>
+    <div class="process-step">
+      <div class="step-num">03</div>
+      <div class="step-title">Intro Call</div>
+      <div class="step-desc">If there's a fit, we schedule a 30-minute call. No pressure. We talk about your goals, not ours. You ask the hard questions.</div>
+    </div>
+    <div class="process-step">
+      <div class="step-num">04</div>
+      <div class="step-title">Review Contract</div>
+      <div class="step-desc">Use our AI Contract Explainer to understand every clause. We encourage independent legal review — transparency first, always.</div>
+    </div>
+    <div class="process-step">
+      <div class="step-num">05</div>
+      <div class="step-title">Artist Portal Access</div>
+      <div class="step-desc">Once signed, you get your private dashboard: release tracker, royalty reports, AI tools, and direct access to your team.</div>
+    </div>
+    <div class="process-step">
+      <div class="step-num">06</div>
+      <div class="step-title">Build Together</div>
+      <div class="step-desc">We plan your releases with you, not for you. AI tools, marketing support, and a real partnership — every step of the way.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ARTISTS -->
+<section class="artists-section" id="artists">
+  <div class="section-tag">The Roster</div>
+  <h2 class="section-title">CURRENT ARTISTS</h2>
+  <p class="section-desc">A growing family of independent artists supported by smart tools, transparent deals, and genuine investment in their craft.</p>
+
+  <div class="artists-row">
+    <div class="artist-card">
+      <div class="artist-avatar">NX</div>
+      <div class="artist-name">Nova Xen</div>
+      <div class="artist-genre">Dark Pop · Experimental</div>
+      <div class="artist-status">
+        <div class="status-dot"></div>
+        <div class="status-text">In Studio</div>
+      </div>
+    </div>
+    <div class="artist-card">
+      <div class="artist-avatar">RL</div>
+      <div class="artist-name">Rael</div>
+      <div class="artist-genre">Trap Soul · R&B</div>
+      <div class="artist-status">
+        <div class="status-dot yellow"></div>
+        <div class="status-text">Upcoming Release</div>
+      </div>
+    </div>
+    <div class="artist-card">
+      <div class="artist-avatar">SK</div>
+      <div class="artist-name">Skai Levi</div>
+      <div class="artist-genre">Indie Electronic</div>
+      <div class="artist-status">
+        <div class="status-dot"></div>
+        <div class="status-text">Touring</div>
+      </div>
+    </div>
+    <div class="artist-card">
+      <div class="artist-avatar">MQ</div>
+      <div class="artist-name">Marquise</div>
+      <div class="artist-genre">Hip-Hop · Spoken Word</div>
+      <div class="artist-status">
+        <div class="status-dot yellow"></div>
+        <div class="status-text">Mix Review</div>
+      </div>
+    </div>
+    <div class="artist-card" style="border: 1px dashed var(--border-bright); background: transparent;">
+      <div class="artist-avatar" style="border-style: dashed; color: var(--muted);">?</div>
+      <div class="artist-name" style="color: var(--muted);">Your Name Here</div>
+      <div class="artist-genre">Submit your demo</div>
+      <div class="artist-status">
+        <div class="status-text">Open for submissions</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DEMO SUBMISSION -->
+<section class="demo-submit-section" id="submit">
+  <div class="section-tag">Get Signed</div>
+  <h2 class="section-title">SUBMIT YOUR DEMO</h2>
+  <p class="section-desc">We're actively looking for independent artists with a distinct voice. Every submission gets a real listen and structured feedback.</p>
+
+  <div class="submit-layout">
+    <div>
+      <div class="submit-form">
+        <div class="form-row">
+          <label>Artist / Band Name *</label>
+          <input type="text" placeholder="Your stage name" />
+        </div>
+        <div class="form-row">
+          <label>Email Address *</label>
+          <input type="email" placeholder="you@email.com" />
+        </div>
+        <div class="form-row">
+          <label>Primary Genre *</label>
+          <select>
+            <option value="">Select genre...</option>
+            <option>Hip-Hop / Rap</option>
+            <option>R&B / Soul</option>
+            <option>Pop</option>
+            <option>Electronic / EDM</option>
+            <option>Indie / Alternative</option>
+            <option>Afrobeats</option>
+            <option>Latin</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Streaming Profile Link</label>
+          <input type="url" placeholder="Spotify, SoundCloud, Apple Music..." />
+        </div>
+        <div class="form-row">
+          <label>Tell us about yourself (what makes you different)</label>
+          <textarea rows="4" placeholder="Who are you as an artist? What does your music stand for?"></textarea>
+        </div>
+        <div class="form-row">
+          <label>Upload Tracks (MP3 / WAV, max 3 files)</label>
+          <div class="upload-zone">
+            <div class="upload-icon">🎵</div>
+            <div class="upload-text">Drag & drop or click to upload<br><span style="color: var(--border-bright);">Max 50MB per file</span></div>
+          </div>
+        </div>
+        <button class="btn-primary" style="width:100%; margin-top: 0.5rem;">Submit Demo →</button>
+      </div>
+    </div>
+    <div>
+      <div class="section-tag">Why Submit Here?</div>
+      <div class="trust-list">
+        <div class="trust-item">
+          <div class="trust-icon">⚡</div>
+          <div>
+            <div class="trust-title">Response Within 14 Days</div>
+            <div class="trust-desc">Every submission gets a review. You'll receive written feedback whether we move forward or not.</div>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">🔒</div>
+          <div>
+            <div class="trust-title">Your Music Is Protected</div>
+            <div class="trust-desc">Submissions are confidential. We don't share, sell, or use your music without a signed agreement.</div>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">📄</div>
+          <div>
+            <div class="trust-title">Fair, Readable Contracts</div>
+            <div class="trust-desc">All contracts include an AI explainer. You'll understand every clause before deciding anything.</div>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">💰</div>
+          <div>
+            <div class="trust-title">Transparent Royalty Splits</div>
+            <div class="trust-desc">Published split structures, no hidden fees, monthly reporting. You always know where your money is.</div>
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">🤖</div>
+          <div>
+            <div class="trust-title">AI Tools Included</div>
+            <div class="trust-desc">All signed artists get access to the full AI toolkit: bio, press releases, release planning, and more.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section class="roadmap-section" id="roadmap">
+  <div class="section-tag">Build In Public</div>
+  <h2 class="section-title">PLATFORM ROADMAP</h2>
+  <p class="section-desc">We build transparently. Here's what's live, what's coming, and what's on the horizon.</p>
+
+  <div class="roadmap-layout">
+    <div class="roadmap-phases">
+      <div class="phase-item done" onclick="setPhase(1)">
+        <div class="phase-dot">✓</div>
+        <div class="phase-label">
+          <div class="phase-name">Foundation</div>
+          <div class="phase-time">Week 1–2</div>
+        </div>
+      </div>
+      <div class="phase-item active" onclick="setPhase(2)">
+        <div class="phase-dot">2</div>
+        <div class="phase-label">
+          <div class="phase-name">Core Pages</div>
+          <div class="phase-time">Week 3–4 · Active</div>
+        </div>
+      </div>
+      <div class="phase-item" onclick="setPhase(3)">
+        <div class="phase-dot">3</div>
+        <div class="phase-label">
+          <div class="phase-name">AI Integration</div>
+          <div class="phase-time">Week 5–6</div>
+        </div>
+      </div>
+      <div class="phase-item" onclick="setPhase(4)">
+        <div class="phase-dot">4</div>
+        <div class="phase-label">
+          <div class="phase-name">Artist Dashboard</div>
+          <div class="phase-time">Week 7–8</div>
+        </div>
+      </div>
+      <div class="phase-item" onclick="setPhase(5)">
+        <div class="phase-dot">5</div>
+        <div class="phase-label">
+          <div class="phase-name">Scale & Growth</div>
+          <div class="phase-time">Month 3+</div>
+        </div>
+      </div>
+    </div>
+    <div class="phase-detail" id="phaseDetail">
+      <div class="phase-detail-title" id="phaseTitle">CORE PAGES</div>
+      <div class="phase-detail-sub" id="phaseSub">Currently in progress · Week 3–4</div>
+      <ul class="task-list" id="taskList">
+        <li class="task-item done">Set up Next.js + Tailwind project</li>
+        <li class="task-item done">Connected Supabase database</li>
+        <li class="task-item done">Deployed on Vercel with custom domain</li>
+        <li class="task-item">Build homepage with hero section</li>
+        <li class="task-item">Create artist profile pages (dynamic routes)</li>
+        <li class="task-item">Demo submission form with file upload</li>
+        <li class="task-item">Releases page with streaming links</li>
+        <li class="task-item">About / manifesto page</li>
+      </ul>
+      <div class="stack-chips">
+        <span class="chip gold">Next.js 14</span>
+        <span class="chip gold">Tailwind CSS</span>
+        <span class="chip gold">Supabase</span>
+        <span class="chip">Vercel</span>
+        <span class="chip">TypeScript</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">STARKID<span>★</span>RECORDS</div>
+  <ul class="footer-links">
+    <li><a href="#">Artists</a></li>
+    <li><a href="#">AI Tools</a></li>
+    <li><a href="#">Submit Demo</a></li>
+    <li><a href="#">About</a></li>
+    <li><a href="#">Privacy</a></li>
+  </ul>
+  <div class="footer-copy">© 2025 Starkidrecords · Built with Next.js + AI</div>
+</footer>
+
+<!-- MODAL (other AI tools) -->
+<div class="modal-overlay" id="demoModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title" id="modalTitle">AI TOOL</div>
+    <div class="modal-sub" id="modalSub">starkidrecords · ai tools</div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+// ─── ROADMAP PHASES ───
+const phases = {
+  1: {
+    title: "FOUNDATION",
+    sub: "Complete · Week 1–2",
+    tasks: [
+      { text: "GitHub repository created", done: true },
+      { text: "Vercel account + domain connected", done: true },
+      { text: "Next.js project initialized", done: true },
+      { text: "Tailwind CSS configured", done: true },
+      { text: "Supabase project created", done: true },
+      { text: "Environment variables set up", done: true },
+    ],
+    chips: ["GitHub", "Vercel", "Next.js", "Tailwind CSS", "Supabase"]
+  },
+  2: {
+    title: "CORE PAGES",
+    sub: "Currently in progress · Week 3–4",
+    tasks: [
+      { text: "Set up Next.js + Tailwind project", done: true },
+      { text: "Connected Supabase database", done: true },
+      { text: "Deployed on Vercel with custom domain", done: true },
+      { text: "Build homepage with hero section", done: false },
+      { text: "Create artist profile pages (dynamic routes)", done: false },
+      { text: "Demo submission form with file upload", done: false },
+      { text: "Releases page with streaming links", done: false },
+      { text: "About / manifesto page", done: false },
+    ],
+    chips: ["Next.js 14", "Tailwind CSS", "Supabase", "Vercel", "TypeScript"]
+  },
+  3: {
+    title: "AI INTEGRATION",
+    sub: "Upcoming · Week 5–6",
+    tasks: [
+      { text: "Integrate Anthropic Claude API", done: false },
+      { text: "AI Bio Generator endpoint", done: false },
+      { text: "AI Release Planner endpoint", done: false },
+      { text: "AI Contract Explainer endpoint", done: false },
+      { text: "AI Support Chat widget", done: false },
+      { text: "Rate limiting + usage tracking", done: false },
+      { text: "Press Release Writer", done: false },
+    ],
+    chips: ["Claude API", "Next.js API Routes", "Supabase", "Upstash Redis"]
+  },
+  4: {
+    title: "ARTIST DASHBOARD",
+    sub: "Upcoming · Week 7–8",
+    tasks: [
+      { text: "Supabase Auth (email/password login)", done: false },
+      { text: "Artist profile management page", done: false },
+      { text: "Release upload + metadata editor", done: false },
+      { text: "Admin panel for A&R team", done: false },
+      { text: "Demo review workflow", done: false },
+      { text: "Royalty transparency dashboard", done: false },
+      { text: "Email notifications via Resend", done: false },
+    ],
+    chips: ["Supabase Auth", "Supabase Storage", "Resend", "Next.js", "shadcn/ui"]
+  },
+  5: {
+    title: "SCALE & GROWTH",
+    sub: "Future · Month 3+",
+    tasks: [
+      { text: "Analytics dashboard (Plausible)", done: false },
+      { text: "Fan newsletter system", done: false },
+      { text: "SEO-optimized artist/release pages", done: false },
+      { text: "AI mastering integration (Landr API)", done: false },
+      { text: "Mobile app (React Native)", done: false },
+      { text: "Referral / invite system", done: false },
+      { text: "Streaming platform analytics sync", done: false },
+    ],
+    chips: ["Plausible", "Landr API", "React Native", "Stripe", "Vercel Edge"]
+  }
+};
+
+function setPhase(num) {
+  const p = phases[num];
+  document.getElementById('phaseTitle').textContent = p.title;
+  document.getElementById('phaseSub').textContent = p.sub;
+  const list = document.getElementById('taskList');
+  list.innerHTML = p.tasks.map(t =>
+    `<li class="task-item${t.done ? ' done' : ''}">${t.text}</li>`
+  ).join('');
+  const chips = document.querySelector('.stack-chips');
+  chips.innerHTML = p.chips.map((c, i) =>
+    `<span class="chip${i < 3 ? ' gold' : ''}">${c}</span>`
+  ).join('');
+  // update active state
+  document.querySelectorAll('.phase-item').forEach((el, i) => {
+    el.classList.remove('active');
+    if (i + 1 === num) el.classList.add('active');
+  });
+}
+
+// ─── AI BIO GENERATOR ───
+async function generateBio() {
+  const name = document.getElementById('bioName').value || 'Unknown Artist';
+  const genre = document.getElementById('bioGenre').value || 'music';
+  const location = document.getElementById('bioLocation').value || '';
+  const influences = document.getElementById('bioInfluences').value || '';
+  const sound = document.getElementById('bioSound').value || '';
+  const length = document.getElementById('bioLength').value;
+
+  const lengthInstructions = {
+    short: "Write a punchy 2–3 sentence artist bio.",
+    medium: "Write a compelling single-paragraph artist bio (5–7 sentences).",
+    long: "Write a full 3-paragraph press bio with an intro, musical background, and closing statement."
+  };
+
+  const prompt = `${lengthInstructions[length]}
+
+Artist name: ${name}
+Genre: ${genre}
+${location ? `Location: ${location}` : ''}
+${influences ? `Influences: ${influences}` : ''}
+${sound ? `Artist's description of their sound: ${sound}` : ''}
+
+Write in third person. Make it feel authentic, evocative, and press-ready. Avoid clichés like "unique sound" or "genre-defying." Let the details do the work.`;
+
+  const btn = document.getElementById('bioBtn');
+  const output = document.getElementById('bioOutput');
+  const bioText = document.getElementById('bioText');
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating...';
+  output.style.display = 'block';
+  output.classList.add('loading');
+  bioText.innerHTML = 'Writing your bio... <span class="typing-cursor"></span>';
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    const data = await response.json();
+    const text = data.content?.[0]?.text || "Something went wrong. Please try again.";
+    output.classList.remove('loading');
+    bioText.textContent = '';
+    // Typewriter effect
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i < text.length) {
+        bioText.textContent += text[i];
+        i++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 12);
+  } catch (e) {
+    output.classList.remove('loading');
+    bioText.textContent = "Could not connect to AI. Please check your API key configuration.";
+  }
+
+  btn.disabled = false;
+  btn.textContent = '✦ Generate Artist Bio';
+}
+
+// ─── MODAL DEMOS ───
+const demoConfigs = {
+  release: {
+    title: "AI RELEASE PLANNER",
+    sub: "starkidrecords · marketing tools",
+    content: `
+      <div class="demo-field"><label>Release Title</label><input id="rdTitle" type="text" placeholder="e.g. Midnight EP" /></div>
+      <div class="demo-field"><label>Genre</label><input id="rdGenre" type="text" placeholder="e.g. Dark Pop" /></div>
+      <div class="demo-field"><label>Release Date (how many weeks away?)</label><input id="rdWeeks" type="text" placeholder="e.g. 6 weeks" /></div>
+      <div class="demo-field"><label>Platforms (comma-separated)</label><input id="rdPlatforms" type="text" placeholder="e.g. Spotify, Apple Music, TikTok" /></div>
+      <button class="demo-run-btn" onclick="runTool('release')">✦ Generate Release Plan</button>
+      <div class="demo-output" id="releaseOutput" style="display:none;"><span class="output-label">Release Plan</span><span id="releaseText"></span></div>
+    `
+  },
+  contract: {
+    title: "CONTRACT EXPLAINER",
+    sub: "starkidrecords · legal tools",
+    content: `
+      <div class="demo-field"><label>Paste Contract Clause or Section</label><textarea id="contractText" rows="5" placeholder="e.g. 'The Artist grants the Label an exclusive, worldwide, perpetual license to exploit all Masters recorded hereunder...'"></textarea></div>
+      <button class="demo-run-btn" onclick="runTool('contract')">✦ Explain This Clause</button>
+      <div class="demo-output" id="contractOutput" style="display:none;"><span class="output-label">Plain English Explanation</span><span id="contractExplain"></span></div>
+    `
+  },
+  support: {
+    title: "AI SUPPORT ASSISTANT",
+    sub: "starkidrecords · 24/7 help",
+    content: `
+      <div class="demo-field"><label>Ask anything about Starkidrecords</label><textarea id="supportQ" rows="3" placeholder="e.g. How do royalty splits work? What happens after I submit a demo? Do I keep my masters?"></textarea></div>
+      <button class="demo-run-btn" onclick="runTool('support')">✦ Get Answer</button>
+      <div class="demo-output" id="supportOutput" style="display:none;"><span class="output-label">Support Response</span><span id="supportText"></span></div>
+    `
+  },
+  press: {
+    title: "PRESS RELEASE WRITER",
+    sub: "starkidrecords · pr tools",
+    content: `
+      <div class="demo-field"><label>Artist Name</label><input id="prArtist" type="text" placeholder="Nova Xen" /></div>
+      <div class="demo-field"><label>Release Title & Type</label><input id="prRelease" type="text" placeholder="e.g. 'Ghost Season' EP" /></div>
+      <div class="demo-field"><label>Release Date</label><input id="prDate" type="text" placeholder="e.g. July 18, 2025" /></div>
+      <div class="demo-field"><label>3 key talking points</label><textarea id="prPoints" rows="3" placeholder="e.g. First project since signing, features 3 producers, shot 2 music videos..."></textarea></div>
+      <button class="demo-run-btn" onclick="runTool('press')">✦ Write Press Release</button>
+      <div class="demo-output" id="pressOutput" style="display:none;"><span class="output-label">Press Release</span><span id="pressText"></span></div>
+    `
+  },
+  feedback: {
+    title: "DEMO FEEDBACK ORGANIZER",
+    sub: "starkidrecords · a&r tools",
+    content: `
+      <div class="demo-field"><label>Your raw A&R notes or thoughts</label><textarea id="fbNotes" rows="5" placeholder="e.g. Vocals are raw but compelling, beat is repetitive by the 2nd chorus, mix is muddy in low end, chorus has a real hook though..."></textarea></div>
+      <div class="demo-field"><label>Artist Name (optional)</label><input id="fbArtist" type="text" placeholder="Nova Xen" /></div>
+      <button class="demo-run-btn" onclick="runTool('feedback')">✦ Format Feedback</button>
+      <div class="demo-output" id="feedbackOutput" style="display:none;"><span class="output-label">Structured Feedback</span><span id="feedbackText"></span></div>
+    `
+  }
+};
+
+function openDemo(type) {
+  const config = demoConfigs[type];
+  if (!config) return;
+  document.getElementById('modalTitle').textContent = config.title;
+  document.getElementById('modalSub').textContent = config.sub;
+  document.getElementById('modalContent').innerHTML = config.content;
+  document.getElementById('demoModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('demoModal').classList.remove('open');
+}
+
+document.getElementById('demoModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+async function runTool(type) {
+  let prompt = '';
+  let outputId = '';
+  let textId = '';
+  let btnSelector = `[onclick="runTool('${type}')"]`;
+
+  if (type === 'release') {
+    const title = document.getElementById('rdTitle').value || 'New Release';
+    const genre = document.getElementById('rdGenre').value || 'music';
+    const weeks = document.getElementById('rdWeeks').value || '6 weeks';
+    const platforms = document.getElementById('rdPlatforms').value || 'Spotify, Apple Music';
+    prompt = `Create a detailed ${weeks} release plan for an artist releasing "${title}" (${genre}) on ${platforms}. Format it as a week-by-week action plan with specific tasks for each week including social media content ideas, PR outreach, playlist pitching, and release day actions. Be specific and practical.`;
+    outputId = 'releaseOutput'; textId = 'releaseText';
+  } else if (type === 'contract') {
+    const text = document.getElementById('contractText').value || '';
+    if (!text.trim()) { alert('Please paste a contract clause first.'); return; }
+    prompt = `You are a music attorney explaining a contract clause to an independent artist. Explain this clause in plain English:\n\n"${text}"\n\nCover: what it means in simple terms, what the artist is agreeing to, any potential red flags or things to negotiate, and 2–3 questions they should ask their attorney. Be specific and practical.`;
+    outputId = 'contractOutput'; textId = 'contractExplain';
+  } else if (type === 'support') {
+    const q = document.getElementById('supportQ').value || '';
+    if (!q.trim()) { alert('Please enter a question first.'); return; }
+    prompt = `You are the AI support assistant for Starkidrecords, a modern independent music label. Answer this artist's question warmly and clearly:\n\n"${q}"\n\nContext about Starkidrecords: it's artist-first, transparent about royalties (standard is 50/50 net revenue split), artists retain their masters after the contract term, demos get feedback within 14 days, and signed artists get AI tools included. If you don't know something specific, say so honestly.`;
+    outputId = 'supportOutput'; textId = 'supportText';
+  } else if (type === 'press') {
+    const artist = document.getElementById('prArtist').value || 'Artist';
+    const release = document.getElementById('prRelease').value || 'new release';
+    const date = document.getElementById('prDate').value || 'upcoming';
+    const points = document.getElementById('prPoints').value || '';
+    prompt = `Write a professional press release for ${artist}'s "${release}" releasing on ${date}. Key points: ${points}. Include: headline, dateline (from Starkidrecords), 3 paragraphs (announcement, context/quote, label note), and a boilerplate about Starkidrecords. Make it sound credible and compelling for music journalists.`;
+    outputId = 'pressOutput'; textId = 'pressText';
+  } else if (type === 'feedback') {
+    const notes = document.getElementById('fbNotes').value || '';
+    const artist = document.getElementById('fbArtist').value || 'the artist';
+    if (!notes.trim()) { alert('Please enter your A&R notes first.'); return; }
+    prompt = `Transform these raw A&R notes into structured, constructive feedback for ${artist}. Notes: "${notes}". Format as: Strengths (bullet points), Areas for Development (bullet points), Specific Recommendations (numbered), and a brief overall message. Keep it professional, honest, and encouraging. This feedback will be sent directly to the artist.`;
+    outputId = 'feedbackOutput'; textId = 'feedbackText';
+  }
+
+  const outputEl = document.getElementById(outputId);
+  const textEl = document.getElementById(textId);
+  const btn = document.querySelector(btnSelector);
+
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Generating...'; }
+  outputEl.style.display = 'block';
+  outputEl.classList.add('loading');
+  textEl.innerHTML = 'Thinking... <span class="typing-cursor"></span>';
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    const data = await response.json();
+    const text = data.content?.[0]?.text || "Something went wrong. Please try again.";
+    outputEl.classList.remove('loading');
+    textEl.textContent = '';
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i < text.length) { textEl.textContent += text[i]; i++; }
+      else clearInterval(interval);
+    }, 10);
+  } catch (e) {
+    outputEl.classList.remove('loading');
+    textEl.textContent = "Could not reach AI. Make sure your API key is configured.";
+  }
+
+  if (btn) { btn.disabled = false; btn.textContent = '✦ Generate'; }
+}
+
+// Animate on scroll
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.opacity = '1';
+      e.target.style.transform = 'translateY(0)';
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.tool-card, .process-step, .artist-card, .plan-block').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(16px)';
+  el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+  observer.observe(el);
+});
+</script>
+</body>
+</html>
